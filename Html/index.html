@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>一脸Meng Bee</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+		<link rel="stylesheet" href="inc/jquery.mobile-1.4.5.min.css" />
+		<script src="inc/jquery-1.12.3.min.js"></script>
+		<script src="inc/jquery.mobile-1.4.5.min.js"></script>
+	</head>
+	<body>
+		<div data-role="page">
+			<div data-role="header">
+				<h1><img style= "width:30px;height:30px;padding:0px;margin:0px;vertical-align:middle;" src="inc/mengbi.png" />智能家居</h1>
+			</div>
+			<div data-role="content">
+				<div data-role="collapsibleset">
+					<div id="sensorcol" data-role="collapsible" data-collapsed="false" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<h4>传感器</h4>
+						<ul id="sensorlist" data-role="listview" data-inset="true">
+						</ul>
+					</div>
+					<div data-role="collapsible" data-collapsed="false" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<h4>执行器</h4>
+						<ul id="actlist" data-role="listview" data-inset="true">
+						</ul>
+					</div>
+					<div data-role="collapsible" data-collapsed="false" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<h4>视频监控</h4>
+						<ul data-role="listview" data-inset="true">
+							<li><a href="#videoHD" data-rel="popup" data-position-to="origin" data-transition="fade">高清版</a></li>
+							<li><a href="#videoSD" data-rel="popup" data-position-to="origin" data-transition="fade">流畅版</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div data-role="footer">
+				<h4>我们是4321</h4>
+			</div>
+			<div data-role="popup" id="videoHD" data-overlay-theme="b" data-theme="b" data-corners="false">
+				<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">关</a>
+				<img id="videoplayHD" class="popphoto" src="inc/hd.png" style="max-height:512px;" alt="看不到了>_<">
+			</div>
+			<div data-role="popup" id="videoSD" data-overlay-theme="b" data-theme="b" data-corners="false">
+				<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">关</a>
+				<img id="videoplaySD" class="popphoto" src="inc/sd.png" style="max-height:512px;" alt="看不到了>_<">
+			</div>
+		</div>
+		<script>
+			$(document).ready(function(){
+				$.get("initApp?"+Math.random(),{},function(data,textStatus){
+					$.each(data.sensors,function(index,value){
+						var $item=$("<li><img src='inc/"+value.type+".png' class='ui-li-icon ui-corner-none'/>"+value.name+"<span class='ui-li-count'>?</span></li>");
+						$("#sensorlist").append($item);
+					});
+					$.each(data.actuators,function(index,value){
+						//var $item=$("<li><a href=\"#\"><img src='inc/"+value.type+".png' class='ui-li-icon ui-corner-none'/>"+value.name+"</a></li>");
+						var $item=$("<li><img src='inc/"+value.type+".png' class='ui-li-icon ui-corner-none'/>"+value.name+'<div style="float:right"></div></li>');
+						$("#actlist").append($item);
+						if(value.type=="PWM"){
+							$slider=$('<input type="range" id="'+value.node+'" min="'+value.min+'" max="'+value.max+'" value="'+value.def+'" class="pwmslide">');
+							$item.append($slider);
+						}else if(value.type=="switch"){
+							for(i=0;i<value.arr.length;i++){
+								$swit=$('<table><tr><td><label for="'+value.node+i+'">'+'<img src="inc/'+value.arr[i].pic+'.png" class="ui-li-icon ui-corner-none"/>'+value.arr[i].dname+'</label></td><td><input type="checkbox" id="'+value.node+i+'" data-role="flipswitch" data-on-text="开" data-off-text="关" class="switch"></td></tr></table>');
+								$item.append($swit);
+							}
+						}
+						$("#actlist").trigger("create");
+					$('#actlist').listview('refresh');
+					});
+					$('#sensorlist').listview('refresh');
+					$('#actlist').listview('refresh');
+				},"json");
+			});
+						$(document).on(
+							"slidestop",".pwmslide", function(event,ui) {
+								$me=$(event.target);
+								$.get("doPWM?"+$me.attr("id")+"&"+$(this).val()+"&"+Math.random());
+							}
+						);
+						$(document).on(
+							"change",".switch", function(event,ui) {
+								$me=$(event.target);
+								$.get("doSwitch?"+$me.attr("id")+"&"+$(this).prop("checked")+"&"+Math.random());
+							}
+						);
+			
+			var videoHDon=false;
+			var videoSDon=false;
+			var sensorliston=false;
+			var sensorlock=false;
+			var videolock=false;
+			$( "#videoHD" ).bind({
+				popupafteropen: function(event, ui) { videoHDon=true; },
+				popupafterclose: function(event, ui) { videoHDon=false; }
+			});
+			$( "#videoSD" ).bind({
+				popupafteropen: function(event, ui) { videoSDon=true; },
+				popupafterclose: function(event, ui) { videoSDon=false; }
+			});
+			$( "#sensorcol" ).bind({
+				collapsibleexpand: function(event, ui) { sensorliston=true;},
+				collapsiblecollapse: function(event, ui) { sensorliston=false; }
+			});
+			setInterval(function() {
+				if(videolock)return;
+				if(videoHDon){
+					videolock=true;
+					var theCachedImage = new Image();
+					var fn="imageHD?"+Math.random();
+					theCachedImage.src=fn;
+					$(theCachedImage).on("load", function(e) {
+						$("#videoplayHD").attr("src", fn);
+						$("#videoHD").popup("reposition", {positionTo: 'origin'});
+						videolock=false;
+					})
+				}
+			}, 1000);
+			setInterval(function() {
+				if(videolock)return;
+				if(videoSDon){
+					videolock=true;
+					var theCachedImage = new Image();
+					var fn="imageSD?"+Math.random();
+					theCachedImage.src=fn;
+					$(theCachedImage).on("load", function(e) {
+						$("#videoplaySD").attr("src", fn);
+						$("#videoSD").popup("reposition", {positionTo: 'origin'});
+						videolock=false;
+					})
+				}
+			}, 3000);
+			setInterval(function() {
+				//if(sensorlock)return;
+				if(sensorliston){
+					//sensorlock=true;
+					$.get("/getSensor?"+Math.random(),{},function(data,textStatus){
+						$.each(data.sensors,function(index,value){
+							$("#sensorlist li:eq("+index+") span").html(value.value);
+						});
+						//sensorlock=false;
+					},"json");
+				}
+			}, 2000);
+		</script>
+	</body>
+</html>

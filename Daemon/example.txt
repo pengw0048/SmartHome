@@ -1,0 +1,18 @@
+-- format
+-- [text to recognize] | [text to display or execute] | [is text a command?]
+
+-- simple text --
+
+-- commands --
+打开卧室灯|lighton|true
+关上卧室灯|lightoff|true
+打开窗帘|curtainopen|true
+关上窗帘|curtainclose|true
+打开房门|dooropen|true
+关上房门|doorclose|true
+打开加湿器|jsqon|true
+关上加湿器|jsqoff|true
+开始浇水|water|true
+把门锁上|doorlock|true
+--锁门|doorlock|true
+现在多少度|gettemp|true

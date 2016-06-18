@@ -1,0 +1,7 @@
+*.lnp
+*.htm
+*.dep
+*.map
+*.uvgui.*
+*.bak
+output/
